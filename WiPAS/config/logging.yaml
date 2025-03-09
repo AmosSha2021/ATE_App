@@ -1,0 +1,21 @@
+version: 1
+formatters:
+  detailed:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: detailed
+  file:
+    class: logging.handlers.TimedRotatingFileHandler
+    filename: logs/test_suite.log
+    when: midnight
+    backupCount: 7
+    formatter: detailed
+loggers:
+  core:
+    level: DEBUG
+root:
+  level: INFO
+  handlers: [console, file]

@@ -1,0 +1,9 @@
+pyserial==3.5
+paramiko==3.4.0
+pyvisa==1.13.0
+pyyaml==6.0.1
+pytest==8.1.1
+
+pyusb==1.2.1
+
+
