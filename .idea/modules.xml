@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/WiPAS.iml" filepath="$PROJECT_DIR$/.idea/WiPAS.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/ATE_App.iml" filepath="$PROJECT_DIR$/.idea/ATE_App.iml" />
     </modules>
   </component>
 </project>

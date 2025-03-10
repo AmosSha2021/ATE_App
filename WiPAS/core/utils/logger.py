@@ -1,94 +1,93 @@
 # -*- coding: utf-8 -*-
 """
-@Time ： 2025/3/7 22:29
-@Auth ： shahao(Amos-Sha)
-@File ：logger.py
-@IDE ：PyCharm
+@Time: 2025/3/7 22:03
+@Auth: shahao(Amos-Sha)
+@File: logger.py
+@IDE:  PyCharm
 """
 import os
 import logging
 import threading
 from datetime import datetime
-from typing import Optional
-
 
 class TestLogger:
-    _lock = threading.Lock()
-    _instance: Optional['TestLogger'] = None
-    current_handler: Optional[logging.Handler] = None
-
-    def __init__(self, log_dir: str = "logs", dut_name: str = "UNKNOWN_DUT"):
-        if TestLogger._instance is not None:
-            raise RuntimeError("Use get_instance() method to get the singleton instance")
-
+    """
+    1: 线程安全单例模式:通过类变量_instance和线程锁_lock确保全局唯一实例
+    2: 动态文件名生成：文件名包含设备名和毫秒级时间戳(如ATE_Device_20240315_143022_123.log)
+    3: 日志格式统一：精确到毫秒的时间戳+模块定位信息，便于调试
+    4: 资源管理: 在reset_for_new_test()中显式关闭旧文件handler,避免文件句柄泄漏
+    5: 双输出渠道：同时支持文件和控制台输出，且保持格式一致
+    """
+    _lock = threading.Lock()     # 线程安全锁，用于单例模式
+    _instance = None             # 存储单例实例
+    
+    def __init__(self, log_dir: str, dut_name: str):
+        # 初始化日志目录和设备名称
         self.log_dir = log_dir
         self.dut_name = dut_name
+        # 确保日志目录存在
+        os.makedirs(log_dir, exist_ok=True)
+        # 配置日志系统
         self._setup_logger()
 
     @classmethod
-    def initialize(cls, log_dir: str, dut_name: str) -> 'TestLogger':
-        with cls._lock:
+    def initialize(cls, log_dir: str, dut_name: str):
+        with cls._lock:  # 线程安全初始化
             if cls._instance is None:
+                # 创建唯一实例
                 cls._instance = cls(log_dir, dut_name)
-            return cls._instance
 
     @classmethod
     def get_instance(cls) -> 'TestLogger':
+        # 获取已初始化的实例
         if cls._instance is None:
-            raise RuntimeError("Logger not initialized. Call initialize() first")
+            raise RuntimeError("需要先调用initialize()初始化")
         return cls._instance
 
     def _new_file_handler(self):
-        """创建新的文件处理器"""
-        os.makedirs(self.log_dir, exist_ok=True)
-
-        # 生成精确到毫秒的时间戳
+        """创建带时间戳的新日志文件处理器"""
+        # 生成精确到毫秒的时间戳（最后3位）
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
-        log_file = os.path.join(
-            self.log_dir,
-            f"{self.dut_name}_{timestamp}.log"
-        )
-
-        formatter = logging.Formatter(
-            '%(asctime)s.%(msecs)03d | %(levelname)-8s | %(module)s.%(funcName)s | %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-
+        # 构建日志文件路径
+        log_file = os.path.join(self.log_dir, f"{self.dut_name}_{timestamp}.log")
+        # 创建文件处理器
         handler = logging.FileHandler(log_file, encoding='utf-8')
-        handler.setFormatter(formatter)
+        handler.setFormatter(self._get_formatter())
         return handler
 
-    def _setup_logger(self):
-        """配置日志系统"""
-        self.logger = logging.getLogger("WiPAS")
-        self.logger.setLevel(logging.DEBUG)
+    def _get_formatter(self):
+        """定义统一日志格式"""
+        return logging.Formatter(
+            # 包含毫秒的时间戳 | 对齐的日志级别 | 模块.函数名 | 消息
+            '%(asctime)s.%(msecs)03d | %(levelname)-8s | %(module)s.%(funcName)s | %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'  # 定义时间显示格式
+        )
 
-        # 新增文件处理器
+    def _setup_logger(self):
+        """配置日志系统核心方法"""
+        # 获取/创建名为"WiPAS"的日志器
+        self.logger = logging.getLogger("WiPAS")
+        # 设置最低日志级别
+        self.logger.setLevel(logging.DEBUG)
+        
+        # 创建并添加文件处理器
+        self.current_handler = self._new_file_handler()
+        self.logger.addHandler(self.current_handler)
+        
+        # 创建并添加控制台处理器
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(self._get_formatter())
+        self.logger.addHandler(console_handler)
+
+    def reset_for_new_test(self):
+        """测试用例重置方法"""
+        # 移除旧的文件处理器
+        self.logger.removeHandler(self.current_handler)
+        # 关闭旧处理器释放资源
+        self.current_handler.close()
+        # 创建并添加新文件处理器
         self.current_handler = self._new_file_handler()
         self.logger.addHandler(self.current_handler)
 
-        # 控制台处理器检查逻辑优化
-        console_handlers = [h for h in self.logger.handlers
-                            if isinstance(h, logging.StreamHandler)]
-        if not console_handlers:
-            console_handler = logging.StreamHandler()
-            console_handler.setFormatter(logging.Formatter(
-                '%(asctime)s.%(msecs)03d | %(levelname)-8s | %(module)s.%(funcName)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
-            ))
-            self.logger.addHandler(console_handler)
-
-    def reset_for_new_test(self):
-        """开始新测试时调用"""
-        with self._lock:
-            # 关闭并移除旧的文件处理器
-            if self.current_handler:
-                self.logger.removeHandler(self.current_handler)
-                self.current_handler.close()
-            self._setup_logger()
-
-
-
-# 全局访问快捷方式
 def get_logger() -> logging.Logger:
     return TestLogger.get_instance().logger
