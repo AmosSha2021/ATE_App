@@ -119,7 +119,8 @@ class DUTTelnet(DUT_Connection_Base):
 
             # 解码前移除命令回显
             response = output.decode(self.encoding).replace(command, '').strip()
-            self.logger.debug(f"原始响应数据:\n{response}")
+            self.logger.info(f"[response from DUT]: {response}")
+            # self.logger.debug(f"原始响应数据:\n{response}")
             return response
 
         except Exception as e:

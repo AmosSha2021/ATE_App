@@ -22,6 +22,8 @@ class LoginTestCase(BaseTestCase):
         if self.dut_manager:
             login_status = self.dut_manager.get_login_status()
             self.logger.info(f"当前登录状态: {login_status}")
+            if login_status:
+                self.dut_manager.send_recv_command("/opt/addons/am/factory_setup.sh baseAddr show")
             if not login_status:
                 raise Exception("登录失败")
 
