@@ -6,13 +6,11 @@
 @IDE:  PyCharm
 """
 from abc import ABC, abstractmethod
-import logging
+from core.utils.logger import TestLogger
 
 class BaseInstrument(ABC):
-    """仪器驱动基类"""
-    
-    def __init__(self, logger: logging.Logger):
-        self.logger = logger.getChild(self.__class__.__name__)
+    def __init__(self):
+        self.logger = TestLogger.get_logger().getChild(self.__class__.__name__)
         self._connected = False
         
     @abstractmethod

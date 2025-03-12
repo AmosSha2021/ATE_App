@@ -8,18 +8,18 @@
 from abc import ABC, abstractmethod
 import logging
 from typing import Any
+from core.utils.logger import TestLogger
 
 class BaseTestCase(ABC):
-    """测试用例基类"""
-    
     def __init__(self, 
-                 config: dict, 
-                 logger: logging.Logger, 
-                 instrument: Any):
+                 config: dict,
+                 instrument: Any,  # 移除logger参数
+                 dut_manager: Any):
         self.config = config
-        self.logger = logger.getChild(self.__class__.__name__)  # 创建子logger
+        self.logger = TestLogger.get_logger().getChild(self.__class__.__name__)
         self.instrument = instrument
-        
+        self.dut_manager = dut_manager
+
     @abstractmethod
     def setup(self):
         """测试前置操作"""

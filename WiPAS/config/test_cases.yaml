@@ -6,19 +6,37 @@ test_suite:
 
 # 测试用例序列
 test_cases:
-  - id: GPON-2024
-    name: "GPON ABC型号认证测试"
-    test_class: "test_cases.gpon.GPon_abc_TC.GPonTestCase"
-    instrument:
-      type: gpon  # 仪器类型标识符
-      config:  # 仪器专属配置
-        port: COM3
-        baudrate: 115200
-    parameters:
-      tx_power: [-5.0, 5.0]
-      rx_sensitivity: -30.0
-
-# 设备配置（可选）
-instrument_config:
-  resource_name: "TCPIP0::192.168.1.100::inst0::INSTR"  # VISA资源地址
+  - test_case_id: "TC001"
+    test_case_name: "登录设备"
+    test_class: "test_cases.login_test.LoginTestCase"
+    test_steps:
+      - step_id: "STEP001"
+        step_name: "登录设备"
+        action: "dut.login"
+        expect: "success_prompts"
+        
+dut_config:
+  # type: telnet
+  # config:
+  type: telnet  # 通信协议标识符
+  host: "192.168.0.1"
+  port: 23
+  username: root  # 必须配置
+  password: ADTN12345678  # 必须配置
   timeout: 5000  # 毫秒
+  login_prompts: 
+    - "(?i)tc login:"  # 支持多个匹配模式
+    - "login:"
+  password_prompts: 
+    - "(?i)Password:"
+  success_prompts:  # 新增成功提示符配置
+    - "<H3C>"
+    - "#"
+    - "\\$"  # 支持正则表达式
+
+# instrument_config:
+#   type: gpon  # 仪器类型标识符
+#   config:  # 仪器专属配置
+#     port: COM3
+#     baudrate: 115200
+
