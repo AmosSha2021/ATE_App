@@ -1,20 +1,52 @@
 # 测试套件元数据
 test_suite:
-  name: "射频基础测试套件"
+  name: "GPon/WiFi DUTs Commands Test Suite"
   version: 1.2
-  description: "包含射频设备基础功能验证用例"
+  description: "Auto to check the commands of GPon/WiFi DUTs"
 
 # 测试用例序列
 test_cases:
   - test_case_id: "TC001"
     test_case_name: "登录设备"
     test_class: "test_cases.login_test.LoginTestCase"
+    # 将命令验证移动到测试用例配置中
+    commands_validation:  
+      - name: "check Mac Address"
+        command: "/opt/addons/am/factory_setup.sh baseAddr show"
+        expect_regex: "([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}"
+        timeout: 5000
+      - name: "check SN"
+        command: "/opt/addons/am/factory_setup.sh serial-number show"
+        expect_regex: "[A-Za-z0-9]{12}"
+        timeout: 5000
     test_steps:
       - step_id: "STEP001"
         step_name: "登录设备"
         action: "dut.login"
         expect: "success_prompts"
-        
+
+  - test_case_id: "TC002"
+    test_case_name: "执行命令"
+    test_class: "test_cases.commandTestCase.CommandTestCase"
+    commands_validation:
+      - name: "check Mac Address"
+        command: "/opt/addons/am/factory_setup.sh baseAddr show"
+        expect_regex: "([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}"
+
+      - name: "check IP Address"
+        command: "/opt/addons/am/factory_setup.sh serial-number show"
+        expect_regex: "[A-Za-z0-9]{12}"
+    
+
+  - test_case_id: "TC003"
+    test_case_name: "高级功能测试" 
+    test_class: "test_cases.advanced_test.AdvancedTestCase"
+    instrument:
+      type: gpon
+      config:
+        port: COM3
+        baudrate: 115200
+
 dut_config:
   # type: telnet
   # config:
@@ -34,6 +66,10 @@ dut_config:
     - "#"
     - "\\$"  # 支持正则表达式
 
+
+
+
+    
 # instrument_config:
 #   type: gpon  # 仪器类型标识符
 #   config:  # 仪器专属配置

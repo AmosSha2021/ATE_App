@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-@Time: 2025/3/11 22:03
+@Time: 2025/3/13 22:03
 @Auth: shahao(Amos-Sha)
-@File: login_test.py
+@File: CommandTestCase.py
 @IDE:  PyCharm
 """
 from core.test_framework.base_test_case import BaseTestCase
 import re
 
-class LoginTestCase(BaseTestCase):
+class CommandTestCase(BaseTestCase):
     def __init__(self, **kwargs):
         # 显式调用父类初始化
         super().__init__(**kwargs)  # 自动接收config['test_cases']参数

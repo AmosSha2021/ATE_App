@@ -15,7 +15,8 @@ from pprint import pformat
 
 
 class TestManager:
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: str, selected_cases: list = None):  # 新增参数
+        self.selected_cases = selected_cases or []  # 存储过滤条件
         root_logger = TestLogger.get_logger()  # 通过类方法获取
         self.logger = root_logger.getChild("TestManager")
         self.config = self._load_config(config_path)
@@ -47,7 +48,7 @@ class TestManager:
             self.logger.info("已加载 %d 个测试用例", len(test_cases))
             if test_cases:
                 self.logger.info("测试用例列表: %s", 
-                               [case.get('name', '未命名用例') for case in test_cases])
+                               [case.get('test_case_name', '未命名用例') for case in test_cases])
             return test_cases
             
         except Exception as e:
@@ -64,13 +65,16 @@ class TestManager:
         """测试后清理"""
         self.logger.info("正在清理测试资源...")
         self._test_ready = False
-
+        self.logger.info("完成测试...")
     def run_test_sequence(self):
         """执行完整测试流程"""
         try:
-            self.logger.info("..................................................开始执行测试流程..................................................")
             self._pre_test_setup()
             for case in self.test_cases:
+                # 添加过滤逻辑
+                if self.selected_cases and case.get('test_case_id') not in self.selected_cases:
+                    self.logger.info(f"跳过用例: {case.get('test_case_id')}")
+                    continue
                 self._execute_test_case(case)
             self._post_test_cleanup()
         except Exception as e:
@@ -121,12 +125,12 @@ class TestManager:
             dut_manager = self._create_dut()  # 使用全局配置初始化DUT
 
             test_params = {
-                'config': case_config,
+                'config': case_config,               
                 'dut_manager': dut_manager,
                 'instrument': instrument
             }
             
-            test_case = test_class(**test_params)
+            test_case = test_class(**test_params)  # 参数会自动传递给test_class的__init__函数
             test_case.run()
             
         except KeyError as e:

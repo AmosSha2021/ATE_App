@@ -119,7 +119,7 @@ class DUTTelnet(DUT_Connection_Base):
 
             # 解码前移除命令回显
             response = output.decode(self.encoding).replace(command, '').strip()
-            self.logger.info(f"[response from DUT]: {response}")
+            #self.logger.info(f"[response from DUT]: {response}")
             # self.logger.debug(f"原始响应数据:\n{response}")
             return response
 
@@ -136,5 +136,6 @@ class DUTTelnet(DUT_Connection_Base):
         if self.tn:
             self.tn.close()
             self.tn = None
+            self.logger.info("closed telnet connection...")
 
 
