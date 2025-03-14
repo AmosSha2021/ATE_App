@@ -68,11 +68,3 @@ dut_config:
 
 
 
-
-    
-# instrument_config:
-#   type: gpon  # 仪器类型标识符
-#   config:  # 仪器专属配置
-#     port: COM3
-#     baudrate: 115200
-
